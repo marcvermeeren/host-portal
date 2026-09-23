@@ -22,7 +22,27 @@ const originalBooks = [
   { id:'city-at-six', title:'The city at six', by:'Raf', type:'MP3', bytes:6.8*MB, downloads:0, color:'#6d7196', top:'#959abc', ink:'#f1ede9', height:64, offset:7, pattern:'wave', comments:[] },
   { id:'open-letter', title:'An open letter', by:'Noor', type:'MD', bytes:12*1024, downloads:2, color:'#ab6654', top:'#cf8b73', ink:'#fff3e7', height:72, offset:15, pattern:'lines', comments:[
     { name:'Someone nearby', time:'MONDAY · 19:24', text:'The light was orange when I arrived. It felt like finding a small door.' }
-  ] }
+  ] },
+  { id:'window-at-noon', title:'A window at noon', by:'Lena', type:'JPG', bytes:4.4*MB, downloads:2, color:'#b8ad8d', top:'#d8cfb4', ink:'#2e3029', height:68, offset:6, pattern:'hatch', comments:[
+    { name:'Mara', time:'SUNDAY · 12:13', text:'I know this window. The light only lands there in autumn.' }
+  ] },
+  { id:'canal-frequencies', title:'Canal frequencies', by:'Amir', type:'WAV', bytes:22.3*MB, downloads:5, color:'#334f57', top:'#5f7980', ink:'#e8eee9', height:73, offset:17, pattern:'wave', comments:[] },
+  { id:'borrowed-garden', title:'The borrowed garden', by:'Rosa', type:'PDF', bytes:1.8*MB, downloads:3, color:'#7f8f65', top:'#a6b48d', ink:'#faf5e8', height:63, offset:2, pattern:'lines', comments:[
+    { name:'Inez', time:'SATURDAY · 15:18', text:'The last page made me plant something on my balcony.' }
+  ] },
+  { id:'next-visitor', title:'For the next visitor', by:'Unknown', type:'TXT', bytes:5*1000, downloads:0, color:'#d8d3c7', top:'#f0ede5', ink:'#363a35', height:59, offset:12, pattern:'grid', comments:[] },
+  { id:'blue-hour', title:'Blue hour, 18:42', by:'Jules', type:'PNG', bytes:6.2*MB, downloads:4, color:'#476a96', top:'#7392b8', ink:'#f6f5eb', height:70, offset:4, pattern:'wave', comments:[
+    { name:'Tess', time:'FRIDAY · 18:52', text:'I was there ten minutes later.' }
+  ] },
+  { id:'ring-rain', title:'Rain on the Ring', by:'Sefa', type:'MP3', bytes:9.8*MB, downloads:1, color:'#806681', top:'#a990a8', ink:'#f8efe8', height:75, offset:20, pattern:'hatch', comments:[] },
+  { id:'small-departures', title:'Small departures', by:'Pim', type:'EPUB', bytes:1.2*MB, downloads:6, color:'#bd724e', top:'#da9977', ink:'#fff1df', height:66, offset:7, pattern:'sun', comments:[
+    { name:'Joost', time:'THURSDAY · 09:20', text:'I read this while waiting for the ferry.' }
+  ] },
+  { id:'october-index', title:'October index', by:'Ada', type:'CSV', bytes:42*1000, downloads:0, color:'#9d9f92', top:'#c3c5ba', ink:'#26302b', height:61, offset:14, pattern:'grid', comments:[] },
+  { id:'night-ferry', title:'Night ferry', by:'Bo', type:'MP4', bytes:58*MB, downloads:2, color:'#353b56', top:'#616882', ink:'#e9e9ed', height:78, offset:1, pattern:'wave', comments:[
+    { name:'Raf', time:'WEDNESDAY · 22:14', text:'The reflection at 00:18 is unreal.' }
+  ] },
+  { id:'empty-square', title:'The empty square', by:'Fleur', type:'JPG', bytes:3.8*MB, downloads:1, color:'#ba9b8c', top:'#d6b9a8', ink:'#342e2b', height:67, offset:10, pattern:'lines', comments:[] }
 ];
 let books = originalBooks.map((book, index) => ({ ...book, order:index, comments:[...book.comments] }));
 let nextOrder = books.length;
@@ -62,6 +82,7 @@ app.innerHTML = `
       <div class="library-layout">
         <section class="shelf-stage" id="shelf-dropzone" aria-label="Books in the library">
           <div class="book-stack" id="book-stack"></div>
+          <div class="shelf-rail" aria-hidden="true"><span id="shelf-rail-thumb"></span></div>
           <div class="embed-conversation" id="embed-conversation"><p class="mono" id="embed-title"></p><p id="embed-note"></p><span class="mono" id="embed-by"></span></div>
           <div class="drop-hint" aria-hidden="true">Leave it here</div>
         </section>
@@ -99,11 +120,52 @@ app.innerHTML = `
 
 const qs = selector => document.querySelector(selector);
 const stack = qs('#book-stack');
+const rail = qs('.shelf-rail');
+const railThumb = qs('#shelf-rail-thumb');
 const comments = qs('#comments');
 const detail = qs('#detail-panel');
 const fileInput = qs('#file-input');
 const dropzone = qs('#shelf-dropzone');
 const selectedBook = () => books.find(book => book.id === selectedId);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let shelfFrame = 0;
+
+function updateShelfMotion() {
+  shelfFrame = 0;
+  const railHeight = rail.clientHeight;
+  const stackHeight = stack.clientHeight;
+  const scrollHeight = stack.scrollHeight;
+  const scrollTop = stack.scrollTop;
+  const thumbHeight = Math.min(railHeight, Math.max(28, railHeight * stackHeight / scrollHeight));
+  const travel = Math.max(0, railHeight - thumbHeight);
+  const progress = scrollTop / Math.max(1, scrollHeight - stackHeight);
+  const bounds = stack.getBoundingClientRect();
+  const center = bounds.top + bounds.height / 2;
+  const positions = [...stack.querySelectorAll('.book')].map(book => {
+    const rect = book.getBoundingClientRect();
+    return { book, center:rect.top + rect.height / 2 };
+  });
+  railThumb.style.height = `${thumbHeight}px`;
+  railThumb.style.transform = `translateY(${(travel * progress).toFixed(1)}px)`;
+  if (embedded) return;
+  if (reduceMotion.matches) {
+    for (const { book } of positions) {
+      for (const property of ['--motion-x', '--motion-tilt', '--motion-scale', '--motion-brightness']) book.style.removeProperty(property);
+    }
+    return;
+  }
+  for (const { book, center:bookCenter } of positions) {
+    const distance = Math.max(-1, Math.min(1, (bookCenter - center) / (bounds.height * .6)));
+    const focus = 1 - Math.abs(distance);
+    book.style.setProperty('--motion-x', `${(focus * 7).toFixed(1)}px`);
+    book.style.setProperty('--motion-tilt', `${(-distance * 3.2).toFixed(1)}deg`);
+    book.style.setProperty('--motion-scale', (1 + focus * .018).toFixed(3));
+    book.style.setProperty('--motion-brightness', (.89 + focus * .16).toFixed(3));
+  }
+}
+function scheduleShelfMotion() {
+  if (!shelfFrame) shelfFrame = requestAnimationFrame(updateShelfMotion);
+}
 
 function showToast(message) {
   const toast = qs('#toast');
@@ -138,16 +200,17 @@ function makeBook(book) {
   if (book.id === selectedId) button.classList.add('selected');
   button.setAttribute('aria-pressed', String(book.id === selectedId));
   button.setAttribute('aria-label', `${book.title}, ${book.type}, by ${book.by}. Open book and conversation.`);
-  for (const [key, value] of Object.entries({ color:book.color, top:book.top, ink:book.ink, height:`${book.height}px`, offset:`${book.offset}px` })) {
+  for (const [key, value] of Object.entries({ color:book.color, top:book.top, ink:book.ink, height:`${book.height}px`, offset:`${book.offset}px`, lean:`${[-.35,.22,-.18,.34,-.12,.15][book.order % 6]}deg` })) {
     button.style.setProperty(`--book-${key}`, value);
   }
   button.dataset.pattern = book.pattern;
   const top = document.createElement('span'); top.className = 'book__top'; top.setAttribute('aria-hidden', 'true');
+  const pages = document.createElement('span'); pages.className = 'book__pages'; pages.setAttribute('aria-hidden', 'true');
   const spine = document.createElement('span'); spine.className = 'book__spine';
   const by = document.createElement('span'); by.className = 'book__by'; by.textContent = book.by;
   const title = document.createElement('span'); title.className = 'book__title'; title.textContent = book.title;
   const type = document.createElement('span'); type.className = 'book__type mono'; type.textContent = book.type;
-  spine.append(by, title, type); button.append(top, spine);
+  spine.append(by, title, type); button.append(top, pages, spine);
   button.addEventListener('click', () => {
     selectedId = book.id;
     render();
@@ -166,14 +229,17 @@ function makeComment(note) {
   meta.append(name, time); article.append(text, meta);
   return article;
 }
-function render() {
+function render({ resetScroll = false } = {}) {
   if (!selectedBook()) selectedId = books[0]?.id;
+  const previousScroll = stack.scrollTop;
   const shown = embedded ? books.slice(0, document.documentElement.classList.contains('embedded-discussion') ? 2 : 3) : books;
   if (shown.length) stack.replaceChildren(...shown.map(makeBook));
   else {
     const empty = document.createElement('p'); empty.className = 'empty-shelf'; empty.textContent = 'The library is empty. Leave the first file.';
     stack.replaceChildren(empty);
   }
+  stack.scrollTop = resetScroll ? 0 : previousScroll;
+  scheduleShelfMotion();
   const used = usedBytes(books);
   qs('#capacity-label').textContent = `${(used / MB).toFixed(1)} / 500 MB`;
   qs('#capacity-fill').style.width = `${used / CAPACITY_BYTES * 100}%`;
@@ -215,7 +281,7 @@ function addFiles(files) {
     const book = { id:crypto.randomUUID(), title:file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ') || file.name, by:'You', type:extension, bytes:file.size, downloads:0, comments:[], order:nextOrder++, color, top, ink, height:68, offset:8, pattern:'lines', file };
     books.unshift(book); selectedId = book.id; added++;
   }
-  render(); closeDetail();
+  render({ resetScroll:true }); closeDetail();
   if (added) showToast(`${added === 1 ? 'File' : 'Files'} added${retired ? ` · ${retired} less-used ${retired === 1 ? 'book' : 'books'} made room` : ''}.`);
   else if (oversized) showToast('A file must be smaller than 500 MB.');
 }
@@ -255,5 +321,8 @@ addEventListener('message', event => {
   if (event.origin !== location.origin || event.data?.type !== 'host-portal:view') return;
   setEmbeddedView(event.data.view);
 });
+stack.addEventListener('scroll', scheduleShelfMotion, { passive:true });
+addEventListener('resize', scheduleShelfMotion, { passive:true });
+reduceMotion.addEventListener('change', scheduleShelfMotion);
 if (embedded) setEmbeddedView(params.get('view'));
 else render();
