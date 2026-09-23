@@ -22,7 +22,7 @@ a{color:inherit}
 .tab[aria-selected='true']::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:#fff}
 main{flex:1}
 .page-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:62px 0 38px}
-.page-head h1{margin:0;font-size:clamp(36px,3.6vw,56px);line-height:1.05;font-weight:420;letter-spacing:-.055em}
+.page-head h1{margin:0;font-size:32px;line-height:1.1;font-weight:420;letter-spacing:-.01em}
 .primary-action{padding:10px 0 10px 12px;border:0;background:transparent;color:#fff;font-family:'ABC Areal Mono',monospace;font-size:13px;white-space:nowrap;transition:opacity .2s}
 .primary-action:hover{opacity:.6}
 .primary-action span,.take-button span,.post-button span{margin-left:18px;font-size:18px;line-height:0}
@@ -87,7 +87,7 @@ main{flex:1}
  .portal-shell{padding:0 18px 22px}
  .topbar{height:72px}.brand{font-size:29px}.connection{font-size:10px}
  .view-toolbar{min-height:52px}.tabs{gap:32px}.tab{font-size:15px}
- .page-head{padding:38px 0 25px}.page-head h1{font-size:38px}.primary-action{font-size:11px}
+ .page-head{padding:38px 0 25px}.primary-action{font-size:11px}
  .view{display:block}
  .book-stack{min-height:0;padding:40px 4px 16px 0}
  .book{height:calc(var(--book-height) * .77);margin-bottom:7px}
