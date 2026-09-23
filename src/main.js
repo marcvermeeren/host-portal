@@ -66,6 +66,7 @@ const app = document.querySelector('#app');
 app.innerHTML = `
   <div class="portal-shell">
     <header class="topbar">
+      <a class="header-link mono" href="./about.html">ABOUT</a>
       <a class="brand" href="./" aria-label="HOST, return to the library">HOST</a>
       <span class="connection mono"><i aria-hidden="true"></i> LOCAL</span>
     </header>
@@ -82,14 +83,15 @@ app.innerHTML = `
       <div class="library-layout">
         <section class="shelf-stage" id="shelf-dropzone" aria-label="Books in the library">
           <div class="book-stack" id="book-stack"></div>
-          <div class="shelf-rail" aria-hidden="true"><span id="shelf-rail-thumb"></span></div>
           <div class="embed-conversation" id="embed-conversation"><p class="mono" id="embed-title"></p><p id="embed-note"></p><span class="mono" id="embed-by"></span></div>
           <div class="drop-hint" aria-hidden="true">Leave it here</div>
         </section>
         <aside class="detail-panel" id="detail-panel" aria-label="Selected book">
           <button class="detail-close" id="detail-close" type="button" aria-label="Close book details">×</button>
-          <p class="detail-kicker mono">SELECTED BOOK</p>
-          <h2 id="detail-title"></h2>
+          <div class="detail-intro">
+            <div class="book-cover" id="detail-cover" aria-hidden="true"><span class="book-cover__by mono" id="cover-by"></span><strong class="book-cover__title" id="cover-title"></strong></div>
+            <div class="detail-intro__copy"><p class="detail-kicker mono">SELECTED BOOK</p><h2 id="detail-title"></h2></div>
+          </div>
           <dl class="detail-facts mono">
             <div><dt>BY</dt><dd id="detail-by"></dd></div>
             <div><dt>TYPE</dt><dd id="detail-format"></dd></div>
@@ -120,8 +122,6 @@ app.innerHTML = `
 
 const qs = selector => document.querySelector(selector);
 const stack = qs('#book-stack');
-const rail = qs('.shelf-rail');
-const railThumb = qs('#shelf-rail-thumb');
 const comments = qs('#comments');
 const detail = qs('#detail-panel');
 const fileInput = qs('#file-input');
@@ -132,22 +132,13 @@ let shelfFrame = 0;
 
 function updateShelfMotion() {
   shelfFrame = 0;
-  const railHeight = rail.clientHeight;
-  const stackHeight = stack.clientHeight;
-  const scrollHeight = stack.scrollHeight;
-  const scrollTop = stack.scrollTop;
-  const thumbHeight = Math.min(railHeight, Math.max(28, railHeight * stackHeight / scrollHeight));
-  const travel = Math.max(0, railHeight - thumbHeight);
-  const progress = scrollTop / Math.max(1, scrollHeight - stackHeight);
+  if (embedded) return;
   const bounds = stack.getBoundingClientRect();
   const center = bounds.top + bounds.height / 2;
   const positions = [...stack.querySelectorAll('.book')].map(book => {
     const rect = book.getBoundingClientRect();
     return { book, center:rect.top + rect.height / 2 };
   });
-  railThumb.style.height = `${thumbHeight}px`;
-  railThumb.style.transform = `translateY(${(travel * progress).toFixed(1)}px)`;
-  if (embedded) return;
   if (reduceMotion.matches) {
     for (const { book } of positions) {
       for (const property of ['--motion-x', '--motion-tilt', '--motion-scale', '--motion-brightness']) book.style.removeProperty(property);
@@ -205,12 +196,11 @@ function makeBook(book) {
   }
   button.dataset.pattern = book.pattern;
   const top = document.createElement('span'); top.className = 'book__top'; top.setAttribute('aria-hidden', 'true');
-  const pages = document.createElement('span'); pages.className = 'book__pages'; pages.setAttribute('aria-hidden', 'true');
   const spine = document.createElement('span'); spine.className = 'book__spine';
   const by = document.createElement('span'); by.className = 'book__by'; by.textContent = book.by;
   const title = document.createElement('span'); title.className = 'book__title'; title.textContent = book.title;
   const type = document.createElement('span'); type.className = 'book__type mono'; type.textContent = book.type;
-  spine.append(by, title, type); button.append(top, pages, spine);
+  spine.append(by, title, type); button.append(top, spine);
   button.addEventListener('click', () => {
     selectedId = book.id;
     render();
@@ -247,6 +237,13 @@ function render({ resetScroll = false } = {}) {
   const book = selectedBook();
   detail.hidden = !book;
   if (!book) return;
+  const cover = qs('#detail-cover');
+  cover.style.setProperty('--cover-color', book.color);
+  cover.style.setProperty('--cover-top', book.top);
+  cover.style.setProperty('--cover-ink', book.ink);
+  cover.dataset.pattern = book.pattern;
+  qs('#cover-title').textContent = book.title;
+  qs('#cover-by').textContent = book.by;
   qs('#detail-title').textContent = book.title;
   qs('#detail-by').textContent = book.by;
   qs('#detail-format').textContent = book.type;

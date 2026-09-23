@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8"/>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ <meta name="theme-color" content="#2c2e2c"/>
+ <meta name="description" content="How HOST works: a small local library for files and conversations, made to build and share."/>
+ <link rel="icon" href="./favicon.svg"/>
+ <title>About HOST</title>
+</head>
+<body>
+ <div class="portal-shell">
+  <header class="topbar">
+   <a class="header-link mono" href="./">← LIBRARY</a>
+   <a class="brand" href="./" aria-label="HOST, return to the library">HOST</a>
+   <span class="connection mono"><i aria-hidden="true"></i> LOCAL</span>
+  </header>
+  <main class="about-main">
+   <div class="about-lead">
+    <p class="mono">ABOUT HOST</p>
+    <h1>A small local internet.</h1>
+    <p>Inspired by Amsterdam’s neighbourhood book cabinets, HOST lets people leave something for whoever comes next.</p>
+   </div>
+   <div class="about-steps">
+    <section><h2>Wake</h2><p>Press the device’s button to open a temporary local Wi-Fi network. Connect and open the library in your browser.</p></section>
+    <section><h2>Share</h2><p>Every book holds a file and its conversation. Leave one, download one, or add a comment. Downloads stay in the library.</p></section>
+    <section><h2>Make room</h2><p>The library holds 500 MB. When it fills, books with the fewest downloads and comments leave to make space for new ones.</p></section>
+   </div>
+   <div class="about-build">
+    <div><p class="mono">BUILD YOUR OWN</p><h2>Make a HOST.</h2></div>
+    <p>Based on an ESP32-S3, a TF card, a button, and a ring of light. The project is open to build and adapt.</p>
+    <a class="about-build__link mono" href="https://github.com/marcvermeeren/host-casing" target="_blank" rel="noopener noreferrer">Build your own host <span aria-hidden="true">↗</span></a>
+   </div>
+  </main>
+  <footer class="site-foot mono">DESIGN PREVIEW · BROWSER LOCAL</footer>
+ </div>
+ <script type="module" src="./src/about.js"></script>
+</body>
+</html>
