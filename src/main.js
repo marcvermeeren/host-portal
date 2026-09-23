@@ -13,10 +13,10 @@ const originalBooks=[
  {id:'open-letter',title:'An open letter',by:'Noor',type:'MD',size:'12 KB',left:'SUNDAY',color:'#ab6654',top:'#cf8b73',ink:'#fff3e7',height:72,offset:15,pattern:'lines',description:'A letter to the next person who finds this small network.'}
 ];
 const originalMessages=[
- {id:'note-1',name:'Noor',time:'TODAY · 10:42',text:'Found a little poem on the tram. I left it on the shelf for whoever needs it.',tone:'cream',tilt:'-1.2deg'},
- {id:'note-2',name:'Eli',time:'YESTERDAY · 17:09',text:'Thank you for the rain recording. I left a drawing in return.',tone:'blue',tilt:'1deg'},
- {id:'note-3',name:'Tess',time:'YESTERDAY · 08:31',text:'Does anyone know why the Westerkerk bells were ringing this morning?',tone:'peach',tilt:'-.6deg'},
- {id:'note-4',name:'Someone nearby',time:'MONDAY · 19:24',text:'The light was orange when I arrived. It felt like finding a small door.',tone:'sage',tilt:'1.4deg'}
+ {id:'note-1',name:'Noor',time:'TODAY · 10:42',text:'Found a little poem on the tram. I left it on the shelf for whoever needs it.'},
+ {id:'note-2',name:'Eli',time:'YESTERDAY · 17:09',text:'Thank you for the rain recording. I left a drawing in return.'},
+ {id:'note-3',name:'Tess',time:'YESTERDAY · 08:31',text:'Does anyone know why the Westerkerk bells were ringing this morning?'},
+ {id:'note-4',name:'Someone nearby',time:'MONDAY · 19:24',text:'The light was orange when I arrived. It felt like finding a small door.'}
 ];
 
 let books=originalBooks.map(book=>({...book}));
@@ -35,60 +35,47 @@ document.querySelector('#app').innerHTML=`
  <div class="portal-shell">
   <header class="topbar">
    <a class="brand" href="./" aria-label="HOST, return to the shelf">HOST</a>
-   <div class="topbar__right"><span class="connection"><i aria-hidden="true"></i> LOCAL NETWORK</span><span class="topbar__id mono">HOST_01<br>DESIGN PREVIEW</span></div>
+   <span class="connection mono"><i aria-hidden="true"></i> LOCAL</span>
   </header>
-  <div class="page-head">
-   <div><p class="eyebrow mono">HOST_01 <span aria-hidden="true">/</span> OPEN NOW</p><h1 id="view-name">The shelf</h1></div>
-   <p id="view-intro">Files and notes left here, for whoever comes next.</p>
-  </div>
   <div class="view-toolbar">
    <div class="tabs" role="tablist" aria-label="HOST sections">
-    <button class="tab" id="shelf-tab" type="button" role="tab" aria-controls="shelf-view"><span>01</span> Shelf <em id="book-count"></em></button>
-    <button class="tab" id="board-tab" type="button" role="tab" aria-controls="board-view"><span>02</span> Message board <em id="note-count"></em></button>
+    <button class="tab" id="shelf-tab" type="button" role="tab" aria-controls="shelf-view">Shelf</button>
+    <button class="tab" id="board-tab" type="button" role="tab" aria-controls="board-view">Message board</button>
    </div>
-   <button class="primary-action" id="primary-action" type="button">Leave a file <span aria-hidden="true">↗</span></button>
   </div>
   <main>
+   <div class="page-head"><h1 id="view-name">Shelf</h1><button class="primary-action" id="primary-action" type="button">Leave a file <span aria-hidden="true">↗</span></button></div>
    <section class="view shelf-view" id="shelf-view" role="tabpanel" aria-labelledby="shelf-tab">
     <div class="shelf-stage" id="shelf-dropzone">
-     <div class="surface-label mono"><span>THE SHELF <span aria-hidden="true">/</span> <span id="shelf-count"></span></span><span>TAKE ONE · LEAVE ONE</span></div>
      <div class="book-stack" id="book-stack" aria-label="Files on the shelf"></div>
-     <div class="shelf-foot mono"><span>EVERY OBJECT HAS A STORY</span><span>HOST_01 / AMSTERDAM</span></div>
      <div class="drop-hint" aria-hidden="true">Leave it here</div>
     </div>
     <aside class="detail-panel" id="detail-panel" aria-label="Selected file">
      <button class="detail-close" id="detail-close" type="button" aria-label="Close file details">×</button>
-     <div class="detail-cover" id="detail-cover"><span class="mono">HOST<br>OBJECT</span><span class="detail-cover__mark" aria-hidden="true">✳</span></div>
-     <p class="detail-kicker mono" id="detail-kicker"></p>
+     <p class="detail-kicker mono">SELECTED FILE</p>
      <h2 id="detail-title"></h2>
-     <p class="detail-description" id="detail-description"></p>
-     <dl class="detail-facts mono"><div><dt>LEFT BY</dt><dd id="detail-by"></dd></div><div><dt>FORMAT</dt><dd id="detail-format"></dd></div><div><dt>SIZE</dt><dd id="detail-size"></dd></div></dl>
-     <button class="take-button" id="take-button" type="button">Take this file <span aria-hidden="true">↘</span></button>
-     <p class="detail-footnote mono">TAKING REMOVES IT FROM THE SHELF</p>
+     <dl class="detail-facts mono"><div><dt>BY</dt><dd id="detail-by"></dd></div><div><dt>TYPE</dt><dd id="detail-format"></dd></div><div><dt>SIZE</dt><dd id="detail-size"></dd></div></dl>
+     <button class="take-button" id="take-button" type="button">Take file <span aria-hidden="true">↘</span></button>
     </aside>
     <div class="detail-scrim" id="detail-scrim"></div>
    </section>
    <section class="view board-view" id="board-view" role="tabpanel" aria-labelledby="board-tab" hidden>
     <div class="board-stage">
-     <div class="surface-label mono"><span>THE BOARD <span aria-hidden="true">/</span> <span id="board-count"></span></span><span>NOTES FROM NEARBY</span></div>
      <div class="notes-grid" id="notes-grid"></div>
-     <div class="board-foot mono">A SLOWER WAY TO SAY HELLO</div>
     </div>
     <aside class="composer">
-     <p class="composer__eyebrow mono">LEAVE A NOTE / 01</p>
-     <h2>Something for the next person.</h2>
+     <h2>Leave a note</h2>
      <form id="message-form">
-      <label for="message-text">YOUR MESSAGE</label>
-      <textarea id="message-text" maxlength="280" rows="5" placeholder="Write something here…" required></textarea>
-      <label for="message-name">YOUR NAME <span>(OPTIONAL)</span></label>
-      <input id="message-name" maxlength="24" autocomplete="nickname" placeholder="Anonymous"/>
-      <button class="post-button" type="submit">Pin to the board <span aria-hidden="true">↗</span></button>
+      <label class="visually-hidden" for="message-text">Message</label>
+      <textarea id="message-text" maxlength="280" rows="5" placeholder="Your message" required></textarea>
+      <label class="visually-hidden" for="message-name">Name (optional)</label>
+      <input id="message-name" maxlength="24" autocomplete="nickname" placeholder="Name (optional)"/>
+      <button class="post-button" type="submit">Post note <span aria-hidden="true">↗</span></button>
      </form>
-     <p class="composer__foot mono">NOTES IN THIS PREVIEW STAY IN YOUR BROWSER</p>
     </aside>
    </section>
   </main>
-  <footer class="site-foot mono"><span>A SMALL LOCAL INTERNET</span><span>DESIGN PREVIEW · NO DEVICE CONNECTED</span></footer>
+  <footer class="site-foot mono">DESIGN PREVIEW · BROWSER LOCAL</footer>
  </div>
  <input id="file-input" type="file" multiple hidden/>
  <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -133,37 +120,28 @@ function makeBook(book){
 }
 function renderBooks(){
  stack.replaceChildren(...(embedded?books.slice(0,3):books).map(makeBook));
- for(const element of [qs('#book-count'),qs('#shelf-count')])element.textContent=String(books.length).padStart(2,'0');
 }
 function renderDetail(){
  const book=books.find(item=>item.id===selectedId);
  if(!book){detail.hidden=true;return;}
  detail.hidden=false;
- qs('#detail-cover').style.setProperty('--cover-color',book.color);
- qs('#detail-cover').style.setProperty('--cover-top',book.top);
- qs('#detail-kicker').textContent=`OBJECT ${String(books.indexOf(book)+1).padStart(2,'0')} / ${book.left}`;
  qs('#detail-title').textContent=book.title;
- qs('#detail-description').textContent=book.description;
  qs('#detail-by').textContent=book.by;
  qs('#detail-format').textContent=book.type;
  qs('#detail-size').textContent=book.size;
 }
-function makeNote(note,index){
- const article=document.createElement('article');article.className=`note note--${note.tone}`;
- article.style.setProperty('--tilt',note.tilt||'0deg');
- const pin=document.createElement('span');pin.className='note__pin';pin.setAttribute('aria-hidden','true');
- const number=document.createElement('span');number.className='note__number mono';number.textContent=String(index+1).padStart(2,'0');
+function makeNote(note){
+ const article=document.createElement('article');article.className='note';
  const text=document.createElement('p');text.textContent=note.text;
  const meta=document.createElement('div');meta.className='note__meta mono';
  const name=document.createElement('span');name.textContent=note.name;
  const time=document.createElement('time');time.textContent=note.time;
- meta.append(name,time);article.append(pin,number,text,meta);
+ meta.append(name,time);article.append(text,meta);
  return article;
 }
 function renderMessages(){
  const messages=[...addedMessages,...originalMessages];
  notesGrid.replaceChildren(...(embedded?messages.slice(0,2):messages).map(makeNote));
- for(const element of [qs('#note-count'),qs('#board-count')])element.textContent=String(messages.length).padStart(2,'0');
 }
 function setView(view){
  currentView=view==='board'?'board':'shelf';
@@ -173,8 +151,7 @@ function setView(view){
   qs(`#${name}-tab`).tabIndex=active?0:-1;
   qs(`#${name}-view`).hidden=!active;
  }
- qs('#view-name').textContent=currentView==='shelf'?'The shelf':'Message board';
- qs('#view-intro').textContent=currentView==='shelf'?'Files and notes left here, for whoever comes next.':'A slower way to speak to someone nearby.';
+ qs('#view-name').textContent=currentView==='shelf'?'Shelf':'Message board';
  qs('#primary-action').innerHTML=currentView==='shelf'?'Leave a file <span aria-hidden="true">↗</span>':'Leave a note <span aria-hidden="true">↗</span>';
  closeDetail();
 }
@@ -217,7 +194,7 @@ qs('#message-form').addEventListener('submit',event=>{
  event.preventDefault();
  const text=qs('#message-text').value.trim(),name=qs('#message-name').value.trim()||'Anonymous';
  if(!text)return;
- addedMessages.unshift({id:crypto.randomUUID(),name:name.slice(0,24),time:'JUST NOW',text:text.slice(0,280),tone:['cream','blue','peach','sage'][addedMessages.length%4],tilt:'-.5deg'});
+ addedMessages.unshift({id:crypto.randomUUID(),name:name.slice(0,24),time:'JUST NOW',text:text.slice(0,280)});
  addedMessages=addedMessages.slice(0,12);
  try{localStorage.setItem('host-portal-notes-v1',JSON.stringify(addedMessages));}catch{}
  qs('#message-form').reset();renderMessages();showToast('Your note is on this browser’s preview board.');
