@@ -3,6 +3,7 @@ import { CAPACITY_BYTES, makeRoom, usedBytes } from './library-state.js';
 
 const params = new URLSearchParams(location.search);
 const embedded = params.get('embed') === '1';
+const isBookRoute = () => /\/book(?:\.html)?\/?$/.test(location.pathname);
 document.documentElement.classList.toggle('embedded', embedded);
 
 const MB = 1_000_000;
@@ -60,7 +61,7 @@ if (!embedded) {
   } catch { /* Storage may be unavailable on a local portal. */ }
 }
 let selectedId = params.get('view') === 'board' ? 'after-the-rain' : books[0].id;
-if (!embedded && location.pathname.endsWith('/book.html')) selectedId = params.get('id') || selectedId;
+if (!embedded && isBookRoute()) selectedId = params.get('id') || selectedId;
 let toastTimer;
 
 const app = document.querySelector('#app');
@@ -131,7 +132,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let shelfFrame = 0;
 
 function showRoute() {
-  const detailRoute = !embedded && location.pathname.endsWith('/book.html');
+  const detailRoute = !embedded && isBookRoute();
   document.documentElement.classList.toggle('detail-page', detailRoute);
   document.title = detailRoute && selectedBook() ? `${selectedBook().title} — HOST` : 'HOST — Local library';
   const headerLink = qs('#header-link');
@@ -236,7 +237,7 @@ function makeComment(note) {
 function render({ resetScroll = false } = {}) {
   if (!selectedBook()) {
     selectedId = books[0]?.id;
-    if (!embedded && location.pathname.endsWith('/book.html')) {
+    if (!embedded && isBookRoute()) {
       history.replaceState({}, '', './');
       showRoute();
       showToast('That book is no longer in this browser session.');
@@ -385,7 +386,7 @@ addEventListener('resize', scheduleShelfMotion, { passive:true });
 reduceMotion.addEventListener('change', scheduleShelfMotion);
 addEventListener('popstate', () => {
   const routeId = new URLSearchParams(location.search).get('id');
-  if (location.pathname.endsWith('/book.html') && routeId) selectedId = routeId;
+  if (isBookRoute() && routeId) selectedId = routeId;
   showRoute(); render();
 });
 if (embedded) setEmbeddedView(params.get('view'));

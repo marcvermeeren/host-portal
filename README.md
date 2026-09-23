@@ -2,7 +2,7 @@
 
 A small, offline-ready browser interface for the HOST device. Every book represents both a file and its conversation. The library scrolls horizontally through front covers; selecting one opens its own page with file details, comments, and a place to reply. The About page explains the concept and links to the open-source build. The interface uses the same dark ground and typography as the HOST teaser.
 
-Run `npm ci` and `npm run dev`, then open http://localhost:5176. The About page is at http://localhost:5176/about.html; book pages use `book.html?id=…`. `npm run build` creates all three pages in `dist/` with relative asset URLs so they can be served from a device or a nested preview path.
+Run `npm ci` and `npm run dev`, then open http://localhost:5176. The About page is at http://localhost:5176/about.html; book pages use `book.html?id=…` (the Worker serves them at `/book?id=…`). `npm run build` creates all three pages in `dist/` with relative asset URLs so they can be served from a device or a nested preview path.
 
 This is a **design prototype**, not the ESP32 service. The sixteen sample books have no downloadable files attached. Files added through the picker or drop zone stay in this browser session; downloading one keeps it in the library. Comments on sample books are stored in this browser. No information is sent to another device or visitor.
 
