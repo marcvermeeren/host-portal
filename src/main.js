@@ -60,34 +60,35 @@ if (!embedded) {
   } catch { /* Storage may be unavailable on a local portal. */ }
 }
 let selectedId = params.get('view') === 'board' ? 'after-the-rain' : books[0].id;
+if (!embedded && location.pathname.endsWith('/book.html')) selectedId = params.get('id') || selectedId;
 let toastTimer;
 
 const app = document.querySelector('#app');
 app.innerHTML = `
   <div class="portal-shell">
     <header class="topbar">
-      <a class="header-link mono" href="./about.html">ABOUT</a>
+      <a class="header-link mono" id="header-link" href="./about.html">ABOUT</a>
       <a class="brand" href="./" aria-label="HOST, return to the library">HOST</a>
       <span class="connection mono"><i aria-hidden="true"></i> LOCAL</span>
     </header>
     <main>
       <div class="page-head">
         <h1>Library</h1>
-        <button class="primary-action" id="primary-action" type="button">Leave a file <span aria-hidden="true">↗</span></button>
-      </div>
-      <div class="capacity mono">
-        <span>SPACE</span>
-        <span id="capacity-label"></span>
-        <div class="capacity__track" role="progressbar" aria-label="Library space used" aria-valuemin="0" aria-valuemax="500" id="capacity-progress"><span id="capacity-fill"></span></div>
+        <div class="capacity mono">
+          <span>SPACE</span>
+          <span id="capacity-label"></span>
+          <div class="capacity__track" role="progressbar" aria-label="Library space used" aria-valuemin="0" aria-valuemax="500" id="capacity-progress"><span id="capacity-fill"></span></div>
+        </div>
+        <button class="primary-action pill-action" id="primary-action" type="button">Leave a file <span aria-hidden="true">↗</span></button>
       </div>
       <div class="library-layout">
         <section class="shelf-stage" id="shelf-dropzone" aria-label="Books in the library">
           <div class="book-stack" id="book-stack"></div>
+          <div class="shelf-controls mono"><span>DRAG OR SCROLL TO EXPLORE</span><span id="shelf-count"></span></div>
           <div class="embed-conversation" id="embed-conversation"><p class="mono" id="embed-title"></p><p id="embed-note"></p><span class="mono" id="embed-by"></span></div>
           <div class="drop-hint" aria-hidden="true">Leave it here</div>
         </section>
         <aside class="detail-panel" id="detail-panel" aria-label="Selected book">
-          <button class="detail-close" id="detail-close" type="button" aria-label="Close book details">×</button>
           <div class="detail-intro">
             <div class="book-cover" id="detail-cover" aria-hidden="true"><span class="book-cover__by mono" id="cover-by"></span><strong class="book-cover__title" id="cover-title"></strong></div>
             <div class="detail-intro__copy"><p class="detail-kicker mono">SELECTED BOOK</p><h2 id="detail-title"></h2></div>
@@ -98,7 +99,7 @@ app.innerHTML = `
             <div><dt>SIZE</dt><dd id="detail-size"></dd></div>
             <div><dt>DOWNLOADS</dt><dd id="detail-downloads"></dd></div>
           </dl>
-          <button class="download-button" id="download-button" type="button">Download file <span aria-hidden="true">↘</span></button>
+          <button class="download-button pill-action" id="download-button" type="button">Download file <span aria-hidden="true">↘</span></button>
           <div class="conversation-head"><h3>Conversation</h3><span class="mono" id="comment-count"></span></div>
           <div class="comments" id="comments"></div>
           <form id="comment-form">
@@ -111,7 +112,6 @@ app.innerHTML = `
             </div>
           </form>
         </aside>
-        <div class="detail-scrim" id="detail-scrim"></div>
       </div>
     </main>
     <footer class="site-foot mono">DESIGN PREVIEW · BROWSER LOCAL</footer>
@@ -130,14 +130,31 @@ const selectedBook = () => books.find(book => book.id === selectedId);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let shelfFrame = 0;
 
+function showRoute() {
+  const detailRoute = !embedded && location.pathname.endsWith('/book.html');
+  document.documentElement.classList.toggle('detail-page', detailRoute);
+  document.title = detailRoute && selectedBook() ? `${selectedBook().title} — HOST` : 'HOST — Local library';
+  const headerLink = qs('#header-link');
+  headerLink.textContent = detailRoute ? '← LIBRARY' : 'ABOUT';
+  headerLink.href = detailRoute ? './' : './about.html';
+  if (detailRoute) window.scrollTo(0, 0);
+}
+
+function goHome(event) {
+  if (event) event.preventDefault();
+  history.pushState({}, '', './');
+  showRoute();
+  render();
+}
+
 function updateShelfMotion() {
   shelfFrame = 0;
-  if (embedded) return;
+  if (embedded || document.documentElement.classList.contains('detail-page')) return;
   const bounds = stack.getBoundingClientRect();
-  const center = bounds.top + bounds.height / 2;
+  const center = bounds.left + bounds.width / 2;
   const positions = [...stack.querySelectorAll('.book')].map(book => {
     const rect = book.getBoundingClientRect();
-    return { book, center:rect.top + rect.height / 2 };
+    return { book, center:rect.left + rect.width / 2 };
   });
   if (reduceMotion.matches) {
     for (const { book } of positions) {
@@ -146,12 +163,12 @@ function updateShelfMotion() {
     return;
   }
   for (const { book, center:bookCenter } of positions) {
-    const distance = Math.max(-1, Math.min(1, (bookCenter - center) / (bounds.height * .6)));
+    const distance = Math.max(-1, Math.min(1, (bookCenter - center) / (bounds.width * .55)));
     const focus = 1 - Math.abs(distance);
-    book.style.setProperty('--motion-x', `${(focus * 7).toFixed(1)}px`);
-    book.style.setProperty('--motion-tilt', `${(-distance * 3.2).toFixed(1)}deg`);
-    book.style.setProperty('--motion-scale', (1 + focus * .018).toFixed(3));
-    book.style.setProperty('--motion-brightness', (.89 + focus * .16).toFixed(3));
+    book.style.setProperty('--motion-x', `${(focus * 2).toFixed(1)}px`);
+    book.style.setProperty('--motion-tilt', `${(-distance * 2.5).toFixed(1)}deg`);
+    book.style.setProperty('--motion-scale', (1 + focus * .025).toFixed(3));
+    book.style.setProperty('--motion-brightness', (.92 + focus * .08).toFixed(3));
   }
 }
 function scheduleShelfMotion() {
@@ -164,10 +181,6 @@ function showToast(message) {
   toast.classList.add('visible');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 3800);
-}
-function closeDetail() {
-  detail.classList.remove('open');
-  document.body.classList.remove('detail-open');
 }
 function formatSize(bytes) {
   if (bytes < 1000) return `${bytes} B`;
@@ -203,10 +216,11 @@ function makeBook(book) {
   spine.append(by, title, type); button.append(top, spine);
   button.addEventListener('click', () => {
     selectedId = book.id;
-    render();
-    if (matchMedia('(max-width: 760px)').matches && !embedded) {
-      detail.classList.add('open'); document.body.classList.add('detail-open');
+    if (!embedded) {
+      history.pushState({}, '', `./book.html?id=${encodeURIComponent(book.id)}`);
+      showRoute();
     }
+    render();
   });
   return button;
 }
@@ -220,20 +234,28 @@ function makeComment(note) {
   return article;
 }
 function render({ resetScroll = false } = {}) {
-  if (!selectedBook()) selectedId = books[0]?.id;
-  const previousScroll = stack.scrollTop;
+  if (!selectedBook()) {
+    selectedId = books[0]?.id;
+    if (!embedded && location.pathname.endsWith('/book.html')) {
+      history.replaceState({}, '', './');
+      showRoute();
+      showToast('That book is no longer in this browser session.');
+    }
+  }
+  const previousScroll = stack.scrollLeft;
   const shown = embedded ? books.slice(0, document.documentElement.classList.contains('embedded-discussion') ? 2 : 3) : books;
   if (shown.length) stack.replaceChildren(...shown.map(makeBook));
   else {
     const empty = document.createElement('p'); empty.className = 'empty-shelf'; empty.textContent = 'The library is empty. Leave the first file.';
     stack.replaceChildren(empty);
   }
-  stack.scrollTop = resetScroll ? 0 : previousScroll;
+  stack.scrollLeft = resetScroll ? 0 : previousScroll;
   scheduleShelfMotion();
   const used = usedBytes(books);
   qs('#capacity-label').textContent = `${(used / MB).toFixed(1)} / 500 MB`;
   qs('#capacity-fill').style.width = `${used / CAPACITY_BYTES * 100}%`;
   qs('#capacity-progress').setAttribute('aria-valuenow', (used / MB).toFixed(1));
+  qs('#shelf-count').textContent = `${String(books.length).padStart(2, '0')} BOOKS`;
   const book = selectedBook();
   detail.hidden = !book;
   if (!book) return;
@@ -278,19 +300,23 @@ function addFiles(files) {
     const book = { id:crypto.randomUUID(), title:file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ') || file.name, by:'You', type:extension, bytes:file.size, downloads:0, comments:[], order:nextOrder++, color, top, ink, height:68, offset:8, pattern:'lines', file };
     books.unshift(book); selectedId = book.id; added++;
   }
-  render({ resetScroll:true }); closeDetail();
+  render({ resetScroll:true });
   if (added) showToast(`${added === 1 ? 'File' : 'Files'} added${retired ? ` · ${retired} less-used ${retired === 1 ? 'book' : 'books'} made room` : ''}.`);
   else if (oversized) showToast('A file must be smaller than 500 MB.');
 }
 
 qs('#primary-action').addEventListener('click', () => fileInput.click());
+qs('#header-link').addEventListener('click', event => {
+  if (document.documentElement.classList.contains('detail-page')) goHome(event);
+});
+qs('.brand').addEventListener('click', event => {
+  if (document.documentElement.classList.contains('detail-page')) goHome(event);
+});
 fileInput.addEventListener('change', () => { if (fileInput.files?.length) addFiles([...fileInput.files]); fileInput.value = ''; });
 dropzone.addEventListener('dragenter', event => { event.preventDefault(); dropzone.classList.add('drag-over'); });
 dropzone.addEventListener('dragover', event => event.preventDefault());
 dropzone.addEventListener('dragleave', event => { if (!dropzone.contains(event.relatedTarget)) dropzone.classList.remove('drag-over'); });
 dropzone.addEventListener('drop', event => { event.preventDefault(); dropzone.classList.remove('drag-over'); if (event.dataTransfer?.files.length) addFiles([...event.dataTransfer.files]); });
-qs('#detail-close').addEventListener('click', closeDetail);
-qs('#detail-scrim').addEventListener('click', closeDetail);
 qs('#download-button').addEventListener('click', () => {
   const book = selectedBook();
   if (!book) return;
@@ -319,7 +345,48 @@ addEventListener('message', event => {
   setEmbeddedView(event.data.view);
 });
 stack.addEventListener('scroll', scheduleShelfMotion, { passive:true });
+if (!embedded) {
+  let drag;
+  let ignoreClick = false;
+  stack.addEventListener('wheel', event => {
+    if (Math.abs(event.deltaY) > Math.abs(event.deltaX) && stack.scrollWidth > stack.clientWidth) {
+      event.preventDefault();
+      stack.scrollLeft += event.deltaY;
+    }
+  }, { passive:false });
+  stack.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'mouse') return;
+    drag = { x:event.clientX, scroll:stack.scrollLeft, moved:false };
+  });
+  stack.addEventListener('pointermove', event => {
+    if (!drag) return;
+    const distance = event.clientX - drag.x;
+    if (Math.abs(distance) > 5 && !drag.moved) {
+      drag.moved = true;
+      stack.setPointerCapture(event.pointerId);
+      stack.classList.add('is-dragging');
+    }
+    if (drag.moved) stack.scrollLeft = drag.scroll - distance;
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    ignoreClick = drag.moved;
+    if (ignoreClick) setTimeout(() => { ignoreClick = false; }, 0);
+    drag = null;
+    stack.classList.remove('is-dragging');
+  };
+  stack.addEventListener('pointerup', endDrag);
+  stack.addEventListener('pointercancel', endDrag);
+  stack.addEventListener('click', event => {
+    if (ignoreClick) { event.preventDefault(); event.stopPropagation(); ignoreClick = false; }
+  }, true);
+}
 addEventListener('resize', scheduleShelfMotion, { passive:true });
 reduceMotion.addEventListener('change', scheduleShelfMotion);
+addEventListener('popstate', () => {
+  const routeId = new URLSearchParams(location.search).get('id');
+  if (location.pathname.endsWith('/book.html') && routeId) selectedId = routeId;
+  showRoute(); render();
+});
 if (embedded) setEmbeddedView(params.get('view'));
-else render();
+else { showRoute(); render(); }

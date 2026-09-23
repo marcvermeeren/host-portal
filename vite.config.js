@@ -5,6 +5,7 @@ export default defineConfig({
   base:'./',
   build:{rolldownOptions:{input:{
     portal:fileURLToPath(new URL('./index.html',import.meta.url)),
+    book:fileURLToPath(new URL('./book.html',import.meta.url)),
     about:fileURLToPath(new URL('./about.html',import.meta.url))
   }}}
 });
